@@ -1,5 +1,7 @@
 import discord
 import os
+import subprocess
+import threading
 from datetime import datetime
 
 from discord.ext import commands, tasks
@@ -10,6 +12,9 @@ bullyrainbow = bool(False)
 
 class MyClient(discord.Client):
     async def on_ready(self):
+        process = await start_process(['./gpt4all-lora-quantized-win64.exe', '-m', 'gpt4all-lora-unfiltered-quantized.bin'])
+        thread = threading.Thread(target=read_output, args=(process,client))
+        thread.start()
         print(f'We have logged in as {client.user}')
 
     async def on_message_edit(self, before, after):
@@ -37,6 +42,10 @@ class MyClient(discord.Client):
         # ignores if message is from this bot
         if message.author.id == self.user.id:
             return
+            
+        if message.channel.id == 754889880848564285:
+            await add_input(message.content)
+            
         # # ignore if rainbowbot
         # if message.author.id == 756530024349302824:
         #     return
@@ -111,7 +120,22 @@ class MyClient(discord.Client):
         #      sendmessage.start()
         # if message.content.lower().startswith('/snaekoff'):
         #      sendmessage.stop()
+        
+    async def start_process(command):
+        process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return process
 
+    def read_output(process, client):
+        channel = client.get_channel(754889880848564285)
+        for line in process.stdout:
+            channel.send(line.decode().strip())
+
+    async def add_input(process, input_str):
+        input_bytes = input_str.encode('utf-8')
+        process.stdin.write(input_bytes)
+        process.stdin.flush()
+    
+    
 intents = discord.Intents.default()
 intents.message_content = True
 
