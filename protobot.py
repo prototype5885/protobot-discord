@@ -12,7 +12,7 @@ bullyrainbow = bool(False)
 
 class MyClient(discord.Client):
     async def on_ready(self):
-        process = await start_process(['python', 'test2.py'])
+        process = await start_process(['./gpt4all-lora-quantized-win64.exe', '-m', 'gpt4all-lora-unfiltered-quantized.bin'])
         thread = threading.Thread(target=read_output, args=(process,client))
         thread.start()
         print(f'We have logged in as {client.user}')
